@@ -1,3 +1,6 @@
+
+
+# Calculate expected counts
 library(splines)
 library(np)
 library(MCMCpack)
@@ -60,12 +63,16 @@ bz<-1.0
 vared<-1
 ed<-rnorm(1000,0,sqrt(vared))
 d<-(1.0+bx*x+bu*u+bz*z+ed) 
-#normal dose; place holder for non-symmetric dose dist;
-# x and u are time-varying covariates, z are fixed baseline variable;
-# dose is time-varying not single point treatment assignment!;
-expit <- function(x) {1/(1+exp(-x))}
-y <- rbinom(1000, 1, p=expit(-2 + 0.5*d - 0.4*x + 0.2*u - 0.4*z))
-table(y)
+beta_0 <- 1.0        # Intercept
+beta_dose <- 0.2     # Dose effect
+beta_age <- 0.005    # Age effect
+beta_weight <- -0.002 # Weight effect
+beta_severity <- 0.1  # Se
+y <- rpois(1000, exp(beta_0 + 
+             beta_dose * d + 
+             beta_age * x/100 +
+             beta_weight * z/100 +
+             beta_severity * u))
 
 
 A<-data.frame(obs,id,time,y,x,u,z,d)
@@ -91,11 +98,23 @@ lagdat$d<-d
 # lagdat$di0<-di0
 # lagdat$dlogy<-dlogy #numerically assign dy dx dd with 0 for first visit;
 
-mud1<-mean(expit(-2 +0.5*dose1-0.4*x + 0.2*u - 0.4*z)) 
-mud2<-mean(expit(-2 +0.5*dose2-0.4*x + 0.2*u - 0.4*z)) 
-mud3<-mean(expit(-2 +0.5*dose3-0.4*x + 0.2*u - 0.4*z))
+mud1<-mean((beta_0 + 
+              beta_dose * dose1 + 
+              beta_age * x/100 +
+              beta_weight * z/100 +
+              beta_severity * u)) 
+mud2<-mean((beta_0 + 
+                   beta_dose * dose2 + 
+                   beta_age * x/100 +
+                   beta_weight * z/100 +
+                   beta_severity * u)) 
+mud3<-mean((beta_0 + 
+                   beta_dose * dose3+ 
+                   beta_age * x/100 +
+                   beta_weight * z/100 +
+                   beta_severity * u))
 
-BB<-100 #for faster run;
+BB<-1000 #for faster run;
 Boot_resp_or<-array(0,c(BB,100))
 Boot_resp_weigthed<-array(0,c(BB,100))
 BB_or_dose1 <- rep(NA,BB)
@@ -116,18 +135,18 @@ for(i in 1:BB){
   est.sig_bb<-as.numeric(sqrt(summary(ps.bb)$geese$scale[1]))
   ps_bb<-dnorm(lagdat$d,mean=ps.bb$fitted.values,est.sig_bb)
   # summary(ps_bb); min(ps_bb)
-
+  
   
   ### GPS as a covariate
   ### solid here, however, might need to figure a way to justify in application ns specification;
-  or_bb<-geeglm(cbind(y,1-y) ~ ns(ps_bb,3) + d,id=id, 
+  or_bb<-geeglm(y ~ ns(ps_bb,3) + d,id=id, 
                 data = lagdat,weights=w,
-                family = 'binomial', scale.fix=FALSE, corstr="independence")
+                family = 'poisson', scale.fix=FALSE, corstr="independence")
   
-
-  BB_or_dose1[i]<- expit(mean(predict(or_bb, newdata = data.frame(d = rep(dose1,1000)))))
-  BB_or_dose2[i]<-expit(mean(predict(or_bb, newdata = data.frame(d = rep(dose2,1000)))))
-  BB_or_dose3[i]<-expit(mean(predict(or_bb, newdata = data.frame(d =rep(dose3,1000)))))
+  
+  BB_or_dose1[i]<- (mean(predict(or_bb, newdata = data.frame(d = rep(dose1,1000)))))
+  BB_or_dose2[i]<-(mean(predict(or_bb, newdata = data.frame(d = rep(dose2,1000)))))
+  BB_or_dose3[i]<-(mean(predict(or_bb, newdata = data.frame(d =rep(dose3,1000)))))
   
   
   
@@ -137,26 +156,25 @@ for(i in 1:BB){
   # Evaluate the marginal density at each observed T
   f_d <- predict(d_density, newdata = data.frame(d = lagdat$d))
   # summary(f_d); min(f_d)
-
+  
   
   ## SWGPS
   lagdat$sw <- f_d / ps_bb
-  # summary(lagdat$sw)
   lagdat$wr <- (w  *  lagdat$sw) /sum( w  *  lagdat$sw) 
   #density weights; smart and simple!;
   #weights nolonger subject-specific, now subject-visit-specific;
   
-  or_weighted_bb<-geeglm(cbind(y,1-y) ~ ns(d,3) + x ,id=id, data = lagdat,weights=wr,
-                         family = 'binomial', scale.fix=FALSE, corstr="independence")
-
+  or_weighted_bb<-geeglm(y ~ ns(d,3)  ,id=id, data = lagdat,weights=wr,
+                         family = 'poisson', scale.fix=FALSE, corstr="independence")
+  
   # summary(or_weighted_bb) #weighted estimates are quite different from regression ones, and lower-rank;
   
   # adding checks for three fixed dose levels
-  BB_orw_dose1[i]<-expit(mean(predict(or_weighted_bb, newdata = data.frame(d = rep(dose1,1000)))))
-  BB_orw_dose2[i]<-expit(mean(predict(or_weighted_bb, newdata = data.frame(d = rep(dose2,1000)))))
-  BB_orw_dose3[i]<-expit(mean(predict(or_weighted_bb, newdata = data.frame(d = rep(dose3,1000)))))
+  BB_orw_dose1[i]<-(mean(predict(or_weighted_bb, newdata = data.frame(d = rep(dose1,1000)))))
+  BB_orw_dose2[i]<-(mean(predict(or_weighted_bb, newdata = data.frame(d = rep(dose2,1000)))))
+  BB_orw_dose3[i]<-(mean(predict(or_weighted_bb, newdata = data.frame(d = rep(dose3,1000)))))
   
-
+  
   ### Dose response curve
   d_vals <- seq(min(lagdat$d), max(lagdat$d), length.out = 100) #not affected by BB but do change over data iterations;
   
@@ -173,9 +191,9 @@ for(i in 1:BB){
       
       # Extract observed GPS values for these observations
       observed_gps <- ps_bb[idx]
-      xnew <- lagdat$x[idx]
+      
       predicted_or_Y <- predict(or_bb, newdata = data.frame(d = d_vals[j], ps_bb = observed_gps), type = "response")
-      predicted_weighted_Y <- predict(or_weighted_bb, newdata = data.frame(d = d_vals[j], ps_bb = observed_gps, x= xnew), type = "response")
+      predicted_weighted_Y <- predict(or_weighted_bb, newdata = data.frame(d = d_vals[j], ps_bb = observed_gps), type = "response")
       
       # average over the same does level;
       predicted_d_or[j] <- mean(predicted_or_Y)
@@ -191,8 +209,6 @@ for(i in 1:BB){
   
   
 }
-
-
 # summary statistics;
 
 mean(BB_or_dose1-mud1)
@@ -228,24 +244,18 @@ mean(BB_orw_dose3-mud3)
 sd(BB_orw_dose3-mud3)
 
 
-# looking at density plots
-# Load required libraries
-library(ggplot2)
-library(reshape2)
-
-# Create the plot
 par(mfrow=c(2,1))
-plot(NULL, ylab = 'Response', xlab = 'Dose', ylim=c(0,1),main="GPS Covariate",
+plot(NULL, ylab = 'Response', xlab = 'Dose', ylim=c(0,60),main="GPS Covariate",
      xlim=c(-3,12))
 for (i in 1:dim(Boot_resp_or)[2]){
-  lines(d_vals, Boot_resp_or[i,],type="l", col = rgb(red = 0, green = 0, blue = 1, alpha = 0.2))
+  lines(d_vals, (Boot_resp_or[i,]),type="l", col = rgb(red = 0, green = 0, blue = 1, alpha = 0.2))
 }
 points(lagdat$d,lagdat$y,pch=16,cex=0.8,col=rgb(red = 1, green = 0, blue = 0, alpha = 0.2))
 
-plot(NULL, ylab = 'Response', xlab = 'Dose', ylim=c(0,1),main="GPS Weighted Regression",
+plot(NULL, ylab = 'Response', xlab = 'Dose', ylim=c(0,60),main="GPS Weighted Regression",
      xlim=c(-3,12))
 for (i in 1:dim(Boot_resp_weigthed)[2]){
-  lines(d_vals, Boot_resp_weigthed[i,],type="l", col = rgb(red = 0, green = 0, blue = 1, alpha = 0.2))
+  lines(d_vals, (Boot_resp_weigthed[i,]),type="l", col = rgb(red = 0, green = 0, blue = 1, alpha = 0.2))
 }
 points(lagdat$d,lagdat$y,pch=16,cex=0.8,col=rgb(red = 1, green = 0, blue = 0, alpha = 0.2))
 
