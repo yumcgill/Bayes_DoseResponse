@@ -39,8 +39,3 @@ options(mc.cores = 20)
 ```
 Adjust the number of cores based on your system.
 
-## Citation
-
-If you use this code, please cite:
-
-Luo, Y., Liu, K., Singh, R., & Graham, D. J. (2025). **A longitudinal Bayesian framework for estimating causal dose-response relationships**. _arXiv:2505.20893_.
