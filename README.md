@@ -1,7 +1,7 @@
 ## Overview
 This repository contains the R code supporting the paper by Yu Luo, Kuan Liu, Ramandeep Singh and Daniel J. Graham (2025) ["A longitudinal Bayesian framework for estimating causal dose-response relationships"](https://arxiv.org/abs/2505.20893). 
 
-A nonparametric Bayesian framework is developed for estimating marginal longitudinal causal dose–response functions with repeated outcome measurements. This approach targets the average potential outcome at any fixed dose level and accommodates time-varying confounding through the generalized propensity score.  The proposed framework combines generalized estimating equations (GEE) with the Bayesian bootstrap (BB) and Dirichlet process (DP) priors to provide uncertainty quantification without specifying a full likelihood.
+A nonparametric Bayesian framework is developed for estimating marginal longitudinal causal dose–response functions with repeated outcome measurements. This approach targets the average potential outcome at any fixed dose level and accommodates time-varying confounding through the generalized propensity score. The proposed framework combines generalized estimating equations (GEE) with the Bayesian bootstrap (BB) and Dirichlet process (DP) priors to provide uncertainty quantification without specifying a full likelihood.
 
 ## Repository Structure
 
@@ -39,8 +39,3 @@ options(mc.cores = 20)
 ```
 Adjust the number of cores based on your system.
 
-## Citation
-
-If you use this code, please cite:
-
-Luo, Y., Liu, K., Singh, R., & Graham, D. J. (2025). **A longitudinal Bayesian framework for estimating causal dose-response relationships**. _arXiv:2505.20893_.
