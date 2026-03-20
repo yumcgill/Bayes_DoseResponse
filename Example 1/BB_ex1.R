@@ -7,7 +7,7 @@ bb_one <- function(N_subj = 100,T_obs  = 10, BB = 500, Nv = 200, alpha  = 5, dos
   N <- N_subj * T_obs
   mux <- 0.2; varx <- 0.1
   muu <- 1.0; varu <- 0.6
-  muz <- 0.2; varz <- 0.1
+  muz <- 0; varz <- 0.1
 
 
   stick.breaking <- function(alpha, Nv){
