@@ -7,7 +7,7 @@ dp_one <- function(N_subj = 100,T_obs  = 10, BB = 1000, Nv = 100, alpha  = 5, do
   N <- N_subj * T_obs
   mux <- 0.2; varx <- 0.1
   muu <- 1.0; varu <- 0.6
-  muz <- 0.2; varz <- 0.1
+  muz <- 0; varz <- 0.1
   
 
   stick.breaking <- function(alpha, Nv){

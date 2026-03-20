@@ -24,7 +24,7 @@ n_mc <- 100000
 ## Draw covariates from the true DGP
 mux <- 0.2; varx <- 0.1
 muu <- 1.0; varu <- 0.6
-muz <- 0.2; varz <- 0.1
+muz <- 0; varz <- 0.1
 
 x_mc <- rnorm(n_mc, mux, sqrt(varx))
 u_mc <- rnorm(n_mc, muu, sqrt(varu))

@@ -13,7 +13,7 @@ msm_one_replication <- function(seed,
 
   x <- rnorm(N, 0.2, sqrt(0.1))
   u <- rnorm(N, 1.0, sqrt(0.6))
-  z <- rep(rnorm(N_subj, 0.2, sqrt(0.1)), each = T_obs)
+  z <- rep(rnorm(N_subj, 0, sqrt(0.1)), each = T_obs)
 
   d <- 5 + 4 * x + 2 * u + 1 * z + rnorm(N)
   y <- 20 * exp(d + x - 0.25 * u + 0.5 * z) * exp(rnorm(N))
