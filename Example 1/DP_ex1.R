@@ -7,9 +7,9 @@ dp_one <- function(N_subj = 100,T_obs  = 10, BB = 1000, Nv = 100, alpha  = 5, do
   N <- N_subj * T_obs
   mux <- 0.2; varx <- 0.1
   muu <- 1.0; varu <- 0.6
-  muz <- 0; varz <- 0.1
+  muz <- 0.2; varz <- 0.1
   
-
+  
   stick.breaking <- function(alpha, Nv){
     u <- rbeta(Nv, 1, alpha)
     w <- c(1, cumprod(1 - u[-Nv]))
@@ -22,11 +22,11 @@ dp_one <- function(N_subj = 100,T_obs  = 10, BB = 1000, Nv = 100, alpha  = 5, do
   id   <- rep(1:N_subj, each = T_obs)
   time <- rep(1:T_obs, times = N_subj)
   
-  x <- rnorm(N, mux, sqrt(varx))
-  u <- rnorm(N, muu, sqrt(varu))
   z <- rep(rnorm(N_subj, muz, sqrt(varz)), each = T_obs)
+  x <- rnorm(N, mux , sqrt(varx))  + 0.25 * z
+  u <- rnorm(N, muu, sqrt(varu))
   
-  d <- 5 + 4 * x + 2 * u + 1 * z + rnorm(N)
+  d <- 5 + 4 * x + 2 * u + rnorm(N)
   y <- 20 * exp(d + x - 0.25 * u + 0.5 * z) * exp(rnorm(N))
   
   sim.data <- data.frame(id = id, time = time, x = x, u = u, z = z, d = d, logy = log(y))
