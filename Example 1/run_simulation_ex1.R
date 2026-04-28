@@ -45,4 +45,4 @@ seeds <- sample(c(1:100000000),1000)
 
 BB_ex1_res<-mclapply(seeds,function(x) bb_one(seed = x))
 DP_ex1_res<-mclapply(seeds,function(x) dp_one(seed = x))
-#MSM_ex1_res<-mclapply(seeds,function(x) msm_one_replication(seed = x))
+MSM_ex1_res<-mclapply(seeds,function(x) msm_one_replication(seed = x))
